@@ -5,7 +5,7 @@ interface ResultProps {
   
   const Result = ({ score, restartQuiz }: ResultProps) => {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-green-200 text-black text-3xl font-bold">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-200 text-black text-3xl font-bold">
         🎉 Congratulations! You completed the quiz.
         <p className="mt-4 text-3xl font-bold text-green-600">
           Your Score: {score} / 10

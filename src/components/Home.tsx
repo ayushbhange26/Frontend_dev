@@ -23,7 +23,7 @@ const Home = () => {
         <div className="mt-5">
           <Link
             to="/about"
-            className="text-white bg-blue-400 hover:bg-blue-500 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-8 py-2.5 text-center"
+            className="text-white bg-blue-500 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-8 py-2.5 text-center"
           >
             Start Quiz
           </Link>
