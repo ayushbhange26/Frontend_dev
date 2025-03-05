@@ -44,11 +44,11 @@ const Question = ({
     setTimeout(() => {
       setPopupMessage(null);
       checkAnswer(index);
-    }, 1500);
+    }, 800);
   };
 
   return (
-    <div className="relative w-full max-w-xl bg-yellow-500 rounded-xl p-6 sm:p-8 shadow-lg min-h-[600px] flex flex-col justify-between">
+    <div className="relative w-full max-w-xl bg-gray-900 rounded-xl p-6 sm:p-8 shadow-lg min-h-[600px] flex flex-col justify-between">
     {/* Pop-up Notification (Appears from the Right) */}
     {popupMessage && (
       <div
@@ -59,7 +59,7 @@ const Question = ({
     )}
   
     {/* Question and Options */}
-    <h1 className="text-xl font-bold text-center mb-3">
+    <h1 className="text-xl font-bold text-center mb-3 text-white">
       Question {questionNumber}
     </h1>
     <h2 className="text-lg sm:text-xl font-semibold text-center text-white bg-black p-5 rounded-md min-h-28 flex items-center">
@@ -70,10 +70,10 @@ const Question = ({
         <button
           key={index}
           onClick={() => handleAnswerClick(index)}
-          className={`py-3 px-4 rounded-md transition duration-200 w-full text-center shadow-md font-medium text-white ${
+          className={`py-3 px-4 rounded-md transition duration-200 w-full text-center shadow-md font-medium border-2 border-black ${
             selectedAnswer === index
-              ? "bg-blue-500 hover:bg-blue-700"
-              : "bg-blue-500 hover:bg-blue-700"
+              ? "bg-white text-black hover:bg-gray-500"
+              : "bg-white text-black hover:bg-gray-500"
           }`}
         >
           {option}
@@ -99,6 +99,7 @@ const Question = ({
       `}
     </style>
   </div>
+  
   
   
   

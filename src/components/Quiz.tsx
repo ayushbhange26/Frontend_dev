@@ -139,13 +139,13 @@ const Quiz = () => {
 
   if (!category) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-200 text-black p-6">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black p-6">
   <h2 className="text-2xl font-bold mb-4">Select Quiz Category</h2>
   <div className="grid grid-cols-2 gap-4">
     {categories.map((cat) => (
       <button
         key={cat.value}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        className="bg-white hover:bg-gray-200 text-black font-bold py-2 px-4 rounded border-2 border-black"
         onClick={() => startQuiz(cat.value)}
       >
         {cat.name}
@@ -158,7 +158,7 @@ const Quiz = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-yellow-200 text-black p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black p-6">
       <Score score={score} />
 
       {/* Answer Indicator Panel (Now Persistent) */}
