@@ -70,10 +70,10 @@ const Question = ({
         <button
           key={index}
           onClick={() => handleAnswerClick(index)}
-          className={`py-3 px-4 rounded-md transition duration-200 w-full text-center shadow-md font-medium border-2 border-black ${
+          className={`py-3 px-4 rounded-md transition duration-200 w-full text-center shadow-md font-medium border-2 border-gray-300 ${
             selectedAnswer === index
-              ? "bg-white text-black hover:bg-gray-500"
-              : "bg-white text-black hover:bg-gray-500"
+              ? "bg-white text-black hover:bg-gray-200"
+              : "bg-white text-black hover:bg-gray-200"
           }`}
         >
           {option}
