@@ -4,8 +4,8 @@ import Question from "./Question";
 import Score from "./Score";
 import Result from "./Result";
 import shuffleArray from "../Utilities/Shuffle";
+import jsPDF from "jspdf";
 
-// Define question structure
 interface QuizQuestion {
   question: { text: string };
   correctAnswer: string;
@@ -21,8 +21,12 @@ const Quiz = () => {
   const [category, setCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<(string | null)[]>(Array(10).fill(null));
+  const [lastScores, setLastScores] = useState<number[]>(() => {
+    const stored = localStorage.getItem("quiz_last_scores");
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [showLastScores, setShowLastScores] = useState(false);
 
-  // Categories for selection
   const categories = [
     { name: "General Knowledge", value: "general_knowledge" },
     { name: "Science", value: "science" },
@@ -30,7 +34,6 @@ const Quiz = () => {
     { name: "Geography", value: "geography" },
   ];
 
-  // Fetch questions based on selected category
   const fetchQuestions = async (selectedCategory: string) => {
     setLoading(true);
     try {
@@ -48,7 +51,6 @@ const Quiz = () => {
     }
   };
 
-  // Load stored data from localStorage on mount
   useEffect(() => {
     const storedQuestions = localStorage.getItem("quiz_questions");
     const storedIndex = localStorage.getItem("quiz_currentIndex");
@@ -71,7 +73,6 @@ const Quiz = () => {
     }
   }, []);
 
-  // Shuffle the answers when the question changes
   useEffect(() => {
     if (questions.length > 0 && currentQuestionIndex < questions.length) {
       const options = [
@@ -82,7 +83,6 @@ const Quiz = () => {
     }
   }, [questions, currentQuestionIndex]);
 
-  // Handle answer selection
   const checkAnswer = (selectedIndex: number) => {
     if (questions.length === 0 || selectedAnswers[currentQuestionIndex] !== null) return;
 
@@ -103,6 +103,9 @@ const Quiz = () => {
         setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
         localStorage.setItem("quiz_currentIndex", (currentQuestionIndex + 1).toString());
       } else {
+        const updatedScores = [...lastScores, score + (selectedOption === currentQuestion.correctAnswer ? 1 : 0)];
+        localStorage.setItem("quiz_last_scores", JSON.stringify(updatedScores));
+        setLastScores(updatedScores);
         setQuizFinished(true);
         localStorage.removeItem("quiz_questions");
         localStorage.removeItem("quiz_currentIndex");
@@ -112,13 +115,13 @@ const Quiz = () => {
     }, 1500);
   };
 
-  // Reset quiz
   const restartQuiz = () => {
     setCurrentQuestionIndex(0);
     setScore(0);
     setQuizFinished(false);
     setCategory(null);
     setSelectedAnswers(Array(10).fill(null));
+    setShowLastScores(false);
 
     localStorage.removeItem("quiz_currentIndex");
     localStorage.removeItem("quiz_score");
@@ -127,11 +130,20 @@ const Quiz = () => {
     localStorage.removeItem("quiz_selectedAnswers");
   };
 
-  // Handle category selection
   const startQuiz = (selectedCategory: string) => {
     setCategory(selectedCategory);
     localStorage.setItem("quiz_category", selectedCategory);
     fetchQuestions(selectedCategory);
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Quiz Result", 20, 20);
+    doc.setFontSize(14);
+    doc.text(`Category: ${category}`, 20, 40);
+    doc.text(`Score: ${score} / 10`, 20, 50);
+    doc.save("quiz-score.pdf");
   };
 
   if (loading) return <Loading />;
@@ -140,20 +152,43 @@ const Quiz = () => {
   if (!category) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black p-6">
-  <h2 className="text-3xl font-bold mb-4">Select Quiz Category</h2>
-  <div className="grid grid-cols-2 gap-4">
-    {categories.map((cat) => (
-      <button
-        key={cat.value}
-        className="bg-black hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-2xl border-5 border-black"
-        onClick={() => startQuiz(cat.value)}
-      >
-        {cat.name}
-      </button>
-    ))}
-  </div>
-</div>
-
+        <h2 className="text-3xl font-bold mb-4">Select Quiz Category</h2>
+        <div className="grid grid-cols-2 gap-4">
+          {categories.map((cat) => (
+            <button
+              key={cat.value}
+              className="bg-black hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-2xl border-5 border-black"
+              onClick={() => startQuiz(cat.value)}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+        <div className="mt-6">
+          <button
+            className="bg-gray-700 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-2xl mr-4"
+            onClick={() => setShowLastScores(!showLastScores)}
+          >
+            {showLastScores ? "Hide Scores" : "Last Scores"}
+          </button>
+          <button
+            onClick={downloadPDF}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-2xl"
+          >
+            Download Score
+          </button>
+        </div>
+        {showLastScores && (
+          <div className="mt-4 text-center">
+            <h3 className="text-xl font-semibold mb-2">Last Scores</h3>
+            <ul className="list-disc">
+              {lastScores.map((s, i) => (
+                <li key={i}>Attempt {i + 1}: {s} / 10</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -161,10 +196,9 @@ const Quiz = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-white text-black p-6">
       <Score score={score} />
 
-      {/* Answer Indicator Panel (Now Persistent) */}
       <div className="flex space-x-2 mb-4">
         {selectedAnswers.map((answer, index) => {
-          let bgColor = "bg-gray-400"; // Default for unanswered
+          let bgColor = "bg-gray-400";
           if (answer !== null) {
             bgColor = answer === questions[index].correctAnswer ? "bg-green-500" : "bg-red-500";
           }
