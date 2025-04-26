@@ -12,6 +12,11 @@ interface QuizQuestion {
   incorrectAnswers: string[];
 }
 
+interface LastScoreEntry {
+  category: string;
+  score: number;
+}
+
 const Quiz = () => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -21,7 +26,7 @@ const Quiz = () => {
   const [category, setCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState<(string | null)[]>(Array(10).fill(null));
-  const [lastScores, setLastScores] = useState<number[]>(() => {
+  const [lastScores, setLastScores] = useState<LastScoreEntry[]>(() => {
     const stored = localStorage.getItem("quiz_last_scores");
     return stored ? JSON.parse(stored) : [];
   });
@@ -93,24 +98,39 @@ const Quiz = () => {
     setSelectedAnswers(newSelectedAnswers);
     localStorage.setItem("quiz_selectedAnswers", JSON.stringify(newSelectedAnswers));
 
+    let updatedScore = score;
     if (selectedOption === currentQuestion.correctAnswer) {
-      setScore(score + 1);
-      localStorage.setItem("quiz_score", (score + 1).toString());
+      updatedScore = score + 1;
+      setScore(updatedScore);
+      localStorage.setItem("quiz_score", updatedScore.toString());
     }
 
     setTimeout(() => {
       if (currentQuestionIndex + 1 < questions.length) {
-        setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
-        localStorage.setItem("quiz_currentIndex", (currentQuestionIndex + 1).toString());
+        setCurrentQuestionIndex((prevIndex) => {
+          const newIndex = prevIndex + 1;
+          localStorage.setItem("quiz_currentIndex", newIndex.toString());
+          return newIndex;
+        });
       } else {
-        const updatedScores = [...lastScores, score + (selectedOption === currentQuestion.correctAnswer ? 1 : 0)];
-        localStorage.setItem("quiz_last_scores", JSON.stringify(updatedScores));
+        // Quiz finished
+        const finalScore = updatedScore;
+
+        // Save last score with category
+        const stored = localStorage.getItem("quiz_last_scores");
+        const previousScores: LastScoreEntry[] = stored ? JSON.parse(stored) : [];
+        const updatedScores = [...previousScores, { category: category || "Unknown", score: finalScore }];
         setLastScores(updatedScores);
+        localStorage.setItem("quiz_last_scores", JSON.stringify(updatedScores));
+
         setQuizFinished(true);
+
+        // Clean quiz session data
         localStorage.removeItem("quiz_questions");
         localStorage.removeItem("quiz_currentIndex");
         localStorage.removeItem("quiz_score");
         localStorage.removeItem("quiz_selectedAnswers");
+        localStorage.removeItem("quiz_category");
       }
     }, 1500);
   };
@@ -123,11 +143,12 @@ const Quiz = () => {
     setSelectedAnswers(Array(10).fill(null));
     setShowLastScores(false);
 
+    // Do not clear last scores
+    localStorage.removeItem("quiz_questions");
     localStorage.removeItem("quiz_currentIndex");
     localStorage.removeItem("quiz_score");
-    localStorage.removeItem("quiz_questions");
-    localStorage.removeItem("quiz_category");
     localStorage.removeItem("quiz_selectedAnswers");
+    localStorage.removeItem("quiz_category");
   };
 
   const startQuiz = (selectedCategory: string) => {
@@ -178,14 +199,29 @@ const Quiz = () => {
             Download Score
           </button>
         </div>
+
+        {/* ✅ Updated Table for Last Scores */}
         {showLastScores && (
-          <div className="mt-4 text-center">
-            <h3 className="text-xl font-semibold mb-2">Last Scores</h3>
-            <ul className="list-disc">
-              {lastScores.map((s, i) => (
-                <li key={i}>Attempt {i + 1}: {s} / 10</li>
-              ))}
-            </ul>
+          <div className="mt-6 w-full max-w-md">
+            <h3 className="text-xl font-semibold mb-2 text-center">Last Scores</h3>
+            <table className="min-w-full border text-center">
+              <thead>
+                <tr>
+                  <th className="border px-4 py-2">Attempt</th>
+                  <th className="border px-4 py-2">Category</th>
+                  <th className="border px-4 py-2">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {lastScores.map((entry, i) => (
+                  <tr key={i}>
+                    <td className="border px-4 py-2">{i + 1}</td>
+                    <td className="border px-4 py-2">{entry.category}</td>
+                    <td className="border px-4 py-2">{entry.score} / 10</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
